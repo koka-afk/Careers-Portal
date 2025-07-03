@@ -44,6 +44,10 @@ public class JobVacancyService {
         return jobVacancyRepository.findByExperienceLevelAndIsActiveTrue(experienceLevel);
     }
 
+    public List<JobVacancy> findActiveVacanciesByExperienceLevelAndJobType(ExperienceLevel experienceLevel, JobType jobType){
+        return jobVacancyRepository.findActiveVacanciesByExperienceLevelAndJobType(experienceLevel, jobType);
+    }
+
     public List<JobVacancy> searchVacancies(String keyword){
         return jobVacancyRepository.searchByKeyword(keyword);
     }

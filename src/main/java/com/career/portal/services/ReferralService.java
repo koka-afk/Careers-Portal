@@ -31,7 +31,7 @@ public class ReferralService {
         return referralRepository.save(referral);
     }
 
-    public List<Referral> findReferralByReferrer(Long referrerId){
+    public List<Referral> findReferralsByReferrer(Long referrerId){
         return referralRepository.findByReferrerId(referrerId);
     }
 
@@ -44,7 +44,7 @@ public class ReferralService {
                 .orElseThrow(() -> new IllegalArgumentException("Referral not found."));
 
         if(referral.getStatus() != ReferralStatus.PENDING){
-            throw new IllegalArgumentException("Referral status is not Pending status.");
+            throw new IllegalStateException("Referral status is not Pending status.");
         }
 
         referral.setStatus(ReferralStatus.ACCEPTED);

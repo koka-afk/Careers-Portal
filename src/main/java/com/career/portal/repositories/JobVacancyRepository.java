@@ -21,6 +21,9 @@ public interface JobVacancyRepository extends JpaRepository<JobVacancy, Long> {
 
     List<JobVacancy> findByExperienceLevelAndIsActiveTrue(ExperienceLevel experienceLevel);
 
+    @Query("SELECT jv FROM JobVacancy jv WHERE jv.isActive = true AND jv.experienceLevel = :experienceLevel AND jv.jobType = :jobType")
+    List<JobVacancy> findActiveVacanciesByExperienceLevelAndJobType(@Param("experienceLevel")  ExperienceLevel experienceLevel, @Param("jobType") JobType jobType);
+
     @Query("SELECT jv FROM JobVacancy jv WHERE jv.isActive = true AND jv.applicationDeadline > :currentDate")
     List<JobVacancy> findActiveVacanciesWithinDeadline(@Param("currentDate") LocalDateTime currentDate);
 

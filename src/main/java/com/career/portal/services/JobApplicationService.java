@@ -28,7 +28,7 @@ public class JobApplicationService {
         return jobApplicationRepository.save(jobApplication);
     }
 
-    public List<JobApplication> findApplicationByUser(Long userId){
+    public List<JobApplication> findApplicationsByUser(Long userId){
         return jobApplicationRepository.findByUserId(userId);
     }
 
