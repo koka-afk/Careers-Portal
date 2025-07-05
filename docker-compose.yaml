@@ -1,0 +1,47 @@
+services:
+  careers-portal-app:
+    build: .
+    container_name: careers-portal-app
+#    restart: always
+    ports:
+      - "8080:8080"
+    # Environment variables passed to the Spring Boot application
+    # These will override the values in application.properties
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/career_db?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=noon_user
+      - SPRING_DATASOURCE_PASSWORD=noon_password
+      - SPRING_MAIL_USERNAME=${SPRING_MAIL_USERNAME} # Pass your email from a .env file
+      - SPRING_MAIL_PASSWORD=${SPRING_MAIL_PASSWORD} # Pass your app password from a .env file
+      - JWT_SECRET=${JWT_SECRET} # Pass your JWT secret from a .env file
+    depends_on:
+      - mysql-db
+    # Connect this service to the 'career-network'
+    networks:
+      - career-network
+
+  mysql-db:
+    image: mysql
+    container_name: mysql-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: career_db
+      MYSQL_USER: noon_user
+      MYSQL_PASSWORD: noon_password
+      MYSQL_ROOT_PASSWORD: root_password # Secure password for the root user
+    # Map a volume to persist database data on the host machine
+    volumes:
+      - db-data:/var/lib/mysql
+    # Connect this service to the 'career-network'
+    networks:
+      - career-network
+
+# Define the network for communication between services
+networks:
+  career-network:
+    driver: bridge
+
+# Define the named volume for data persistence
+volumes:
+  db-data:
+    driver: local
