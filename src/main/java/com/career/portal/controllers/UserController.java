@@ -37,14 +37,14 @@ public class UserController {
     }
 
     @GetMapping("/profile/{id}")
-    @PreAuthorize("hasRole('USER') or hasRole('RECRUITER') or hasRole('EMPLOYEE')")
+    @PreAuthorize("#id == authentication.principal.id or hasRole('RECRUITER')")
     public ResponseEntity<User> getUserProfile(@PathVariable Long id){
         Optional<User> user = userService.findById(id);
         return user.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/profile/{id}")
-    @PreAuthorize("hasRole('USER') or hasRole('RECRUITER') or hasRole('EMPLOYEE')")
+    @PreAuthorize("#id == authentication.principal.id or hasRole('RECRUITER') or hasRole('EMPLOYEE')")
     public ResponseEntity<User> updateUserProfile(@PathVariable Long id, @RequestBody User user){
         user.setId(id);
         User updatedUser = userService.updateUser(user);
@@ -65,7 +65,7 @@ public class UserController {
     }
 
     @PostMapping("/{id}/resume")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("#id == authentication.principal.id")
     public ResponseEntity<String> uploadResume(@PathVariable Long id, @RequestParam("file") MultipartFile file){
         try{
             if(file.isEmpty()){

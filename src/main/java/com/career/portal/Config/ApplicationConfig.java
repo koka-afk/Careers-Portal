@@ -44,19 +44,19 @@ public class ApplicationConfig {
         return mailSender;
     }
 
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//        return username -> (org.springframework.security.core.userdetails.UserDetails) userRepository.findByEmail(username)
-//                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
-//    }
-//
-//    @Bean
-//    public AuthenticationProvider authenticationProvider() {
-//        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-//        authProvider.setUserDetailsService(userDetailsService());
-//        authProvider.setPasswordEncoder(passwordEncoder());
-//        return authProvider;
-//    }
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return username -> userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService());
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
 
 
 }

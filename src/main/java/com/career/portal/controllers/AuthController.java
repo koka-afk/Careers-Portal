@@ -3,7 +3,7 @@ package com.career.portal.controllers;
 import com.career.portal.dto.AuthenticationRequest;
 import com.career.portal.dto.AuthenticationResponse;
 import com.career.portal.services.JwtUtil;
-import com.career.portal.services.UserDetailsServiceImpl;
+//import com.career.portal.services.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,7 +29,6 @@ public class AuthController {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationRequest.getEmail(), authenticationRequest.getPassword()));
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
         final String jwt = jwtUtil.generateToken(userDetails);
-
         return ResponseEntity.ok(new AuthenticationResponse(jwt));
     }
 

@@ -4,6 +4,7 @@ import com.career.portal.models.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
+@Slf4j
 public class JwtUtil {
 
     @Value("${jwt.secret}")
@@ -56,8 +58,30 @@ public class JwtUtil {
     }
 
     public boolean validateToken(String token, UserDetails userDetails){
-        final String username = extractUsername(token);
-        return  (username.equals(userDetails.getUsername()) && isTokenExpired(token));
+        log.debug("Validating JWT token for user: {}", userDetails.getUsername());
+        try{
+            final String username = extractUsername(token);
+            log.debug("Token username: {}, UserDetails username: {}", username, userDetails.getUsername());
+            boolean isUsernameValid = username.equals(userDetails.getUsername());
+            boolean isTokenNotExpired = !isTokenExpired(token);
+
+            log.debug("Username valid: {}", isUsernameValid);
+            log.debug("Token not expired: {}", isTokenNotExpired);
+
+            if (isTokenNotExpired) {
+                Date expiration = extractExpiration(token);
+                log.debug("Token expires at: {}", expiration);
+                log.debug("Current time: {}", new Date());
+            }
+
+            boolean isValid = isUsernameValid && isTokenNotExpired;
+            log.debug("Overall token validation result: {}", isValid);
+
+            return isValid;
+        }catch (Exception e){
+            log.error("Error validating JWT token", e);
+            return false;
+        }
     }
 
 }
