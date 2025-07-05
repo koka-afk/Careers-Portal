@@ -1,5 +1,6 @@
 package com.career.portal.services;
 
+import com.career.portal.dto.UserProfileUpdateRequest;
 import com.career.portal.models.User;
 import com.career.portal.models.UserRole;
 import com.career.portal.repositories.UserRepository;
@@ -57,6 +58,17 @@ public class UserService {
 
     public User updateUser(User user){
         return userRepository.save(user);
+    }
+
+    public User updateUserProfile(Long userId, UserProfileUpdateRequest userProfileUpdateRequest){
+        User existingUser = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        existingUser.setFirstName(userProfileUpdateRequest.getFirstName());
+        existingUser.setLastName(userProfileUpdateRequest.getLastName());
+        existingUser.setPhone(userProfileUpdateRequest.getPhone());
+
+        return userRepository.save(existingUser);
     }
 
     public void deleteUser(Long userId){

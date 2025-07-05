@@ -1,5 +1,6 @@
 package com.career.portal.controllers;
 
+import com.career.portal.dto.UserProfileUpdateRequest;
 import com.career.portal.models.User;
 import com.career.portal.models.UserRole;
 import com.career.portal.services.UserService;
@@ -45,9 +46,8 @@ public class UserController {
 
     @PutMapping("/profile/{id}")
     @PreAuthorize("#id == authentication.principal.id or hasRole('RECRUITER') or hasRole('EMPLOYEE')")
-    public ResponseEntity<User> updateUserProfile(@PathVariable Long id, @RequestBody User user){
-        user.setId(id);
-        User updatedUser = userService.updateUser(user);
+    public ResponseEntity<User> updateUserProfile(@PathVariable Long id, @RequestBody UserProfileUpdateRequest updateRequest){
+        User updatedUser = userService.updateUserProfile(id, updateRequest);
         return ResponseEntity.ok(updatedUser);
     }
 
@@ -66,26 +66,29 @@ public class UserController {
 
     @PostMapping("/{id}/resume")
     @PreAuthorize("#id == authentication.principal.id")
-    public ResponseEntity<String> uploadResume(@PathVariable Long id, @RequestParam("file") MultipartFile file){
+    public ResponseEntity<User> uploadResume(@PathVariable Long id, @RequestParam("file") MultipartFile file){
         try{
             if(file.isEmpty()){
-                return ResponseEntity.badRequest().body("Please select a file to upload.");
+                return ResponseEntity.badRequest().build();
             }
 
             Path uploadPath = Paths.get(UPLOAD_DIR);
             if(!Files.exists(uploadPath)){
                 Files.createDirectories(uploadPath);
             }
-
-            String fileName = id + "_" + file.getOriginalFilename();
+            String originalFilename = file.getOriginalFilename();
+            if(originalFilename == null || originalFilename.contains("..")){
+                return ResponseEntity.badRequest().build();
+            }
+            String fileName = id + "_" + originalFilename;
             Path filePath = uploadPath.resolve(fileName);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            userService.uploadResume(id, filePath.toString());
+            User updatedUser = userService.uploadResume(id, filePath.toString());
 
-            return ResponseEntity.ok("Resume uploaded successfully.");
+            return ResponseEntity.ok(updatedUser);
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload resume.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
