@@ -1,5 +1,8 @@
 package com.career.portal.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,6 +16,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class JobVacancy {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,7 +48,7 @@ public class JobVacancy {
     private Double maxSalary;
 
     @Column(name = "is_active")
-    private boolean isActive = true;
+    private boolean isActive;
 
     @Column(name = "posted_by")
     private Long postedBy;
@@ -56,11 +60,13 @@ public class JobVacancy {
     private LocalDateTime applicationDeadline;
 
     @OneToMany(mappedBy = "jobVacancy", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<JobApplication> applications;
 
     @PrePersist
     protected void onCreate(){
         postedAt = LocalDateTime.now();
+        isActive = true;
     }
 
 }

@@ -1,5 +1,8 @@
 package com.career.portal.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,6 +22,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +43,8 @@ public class User implements UserDetails {
     private String phone;
 
     @Enumerated(EnumType.STRING)
-    private UserRole role = UserRole.USER;
+    @Column(length = 20)
+    private UserRole role;
 
     @Column(name = "profile_score")
     private double profileScore;
@@ -54,12 +59,15 @@ public class User implements UserDetails {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<JobApplication> applications;
 
     @OneToMany(mappedBy = "referredUser", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Referral> receivedReferrals;
 
     @OneToMany(mappedBy = "referrer", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Referral> sentReferrals;
 
     @PrePersist

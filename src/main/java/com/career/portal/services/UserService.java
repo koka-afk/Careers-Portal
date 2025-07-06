@@ -45,6 +45,10 @@ public class UserService {
         return userRepository.findByRole(role);
     }
 
+    public List<User> findAllUsers() {
+        return userRepository.findAll();
+    }
+
     public List<User> findCandidatesOrderedByScore(){
         return userRepository.findByRoleOrderByProfileScoreDesc(UserRole.USER);
     }
@@ -53,6 +57,13 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         user.setProfileScore(score);
+        return userRepository.save(user);
+    }
+
+    public User changeUserRole(Long userId, UserRole newRole) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+        user.setRole(newRole);
         return userRepository.save(user);
     }
 
