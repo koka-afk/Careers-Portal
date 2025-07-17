@@ -2,7 +2,11 @@ package com.career.portal.services;
 
 import com.career.portal.models.ApplicationStatus;
 import com.career.portal.models.JobApplication;
+import com.career.portal.models.JobVacancy;
+import com.career.portal.models.User;
 import com.career.portal.repositories.JobApplicationRepository;
+import com.career.portal.repositories.JobVacancyRepository;
+import com.career.portal.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,12 +21,22 @@ import java.util.Optional;
 public class JobApplicationService {
 
     private final JobApplicationRepository jobApplicationRepository;
+    private final UserRepository userRepository;
+    private final JobVacancyRepository jobVacancyRepository;
 
     public JobApplication submitApplication(JobApplication jobApplication){
+        User user = userRepository.findById(jobApplication.getUser().getId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        JobVacancy jobVacancy = jobVacancyRepository.findById(jobApplication.getJobVacancy().getId())
+                .orElseThrow(() -> new IllegalArgumentException("Job vacancy not found"));
+
+        jobApplication.setUser(user);
+        jobApplication.setJobVacancy(jobVacancy);
+
         if(jobApplicationRepository.existsByUserIdAndJobVacancyId(
                 jobApplication.getUser().getId(),
                 jobApplication.getJobVacancy().getId())){
-            throw new IllegalArgumentException("User has already applied for this job.");
+            throw new IllegalStateException("User has already applied for this job.");
         }
 
         return jobApplicationRepository.save(jobApplication);

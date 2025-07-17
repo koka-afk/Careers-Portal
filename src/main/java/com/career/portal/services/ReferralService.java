@@ -1,9 +1,14 @@
 package com.career.portal.services;
 
+import com.career.portal.dto.ReferralRequest;
+import com.career.portal.models.JobVacancy;
 import com.career.portal.models.Referral;
 import com.career.portal.models.ReferralStatus;
+import com.career.portal.models.User;
 import com.career.portal.repositories.JobApplicationRepository;
+import com.career.portal.repositories.JobVacancyRepository;
 import com.career.portal.repositories.ReferralRepository;
+import com.career.portal.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,16 +24,34 @@ public class ReferralService {
 
     private final JobApplicationRepository jobApplicationRepository;
     private final ReferralRepository referralRepository;
+    private final JobVacancyRepository jobVacancyRepository;
+    private final UserRepository userRepository;
 
-    public Referral createReferral(Referral referral){
+    public Referral createReferral(ReferralRequest referralRequest, Long referrerId){
+        User referrer = userRepository.findById(referrerId)
+                .orElseThrow(() -> new IllegalArgumentException("Referrer not found."));
+
+        User referredUser = userRepository.findByEmail(referralRequest.getCandidateEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Candidate with this email does not have an account."));
+
+        JobVacancy jobVacancy = jobVacancyRepository.findById(referralRequest.getJobVacancyId())
+                .orElseThrow(() -> new IllegalArgumentException("Job Vacancy not found."));
+
+
         if(referralRepository.existsByReferrerIdAndReferredUserIdAndJobVacancyId(
-                referral.getReferrer().getId(),
-                referral.getReferredUser().getId(),
-                referral.getJobVacancy().getId())){
+                referrer.getId(),
+                referredUser.getId(),
+                jobVacancy.getId())){
             throw new IllegalArgumentException("Referral already exists for this user and this job.");
         }
 
-        return referralRepository.save(referral);
+        Referral newReferral = new Referral();
+        newReferral.setReferrer(referrer);
+        newReferral.setReferredUser(referredUser);
+        newReferral.setJobVacancy(jobVacancy);
+        newReferral.setMessage(referralRequest.getMessage());
+
+        return referralRepository.save(newReferral);
     }
 
     public List<Referral> findReferralsByReferrer(Long referrerId){

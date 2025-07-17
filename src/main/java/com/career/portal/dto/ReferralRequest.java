@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class ReferralRequest {
-    private Long referredUserId;
+    private String candidateEmail;
     private Long jobVacancyId;
     private String message;
 }
