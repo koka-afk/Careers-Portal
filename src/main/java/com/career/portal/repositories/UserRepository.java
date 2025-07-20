@@ -23,4 +23,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByProfileScoreGreaterThan(@Param("minScore") Double minScore);
 
     boolean existsByEmail(String email);
+
+    Optional<User> findByVerificationToken(String verificationToken);
+
+    Optional<User> findByResetToken(String resetToken);
+
 }

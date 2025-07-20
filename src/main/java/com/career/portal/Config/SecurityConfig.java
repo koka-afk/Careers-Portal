@@ -3,6 +3,7 @@ package com.career.portal.Config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -35,7 +36,15 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/users/register", "/api/jobs/**").permitAll()
+                        .requestMatchers(
+                                "/api/users/register",
+                                "/api/jobs/**",
+                                "/api/auth/login",
+                                "/api/auth/verify-email",
+                                "/api/auth/request-password-reset",
+                                "/api/auth/reset-password",
+                                "/api/auth/resend-verification-email"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

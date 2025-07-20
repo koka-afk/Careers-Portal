@@ -28,10 +28,10 @@ public class UserController {
     private static final String UPLOAD_DIR = "uploads/resumes/";
 
     @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody User user){
+    public ResponseEntity<String> registerUser(@RequestBody User user){
         try{
-            User registeredUser = userService.registerUser(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(registeredUser);
+            userService.registerUser(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Registration successful. Please check your email to verify your account.");
         }catch (IllegalArgumentException e){
             return ResponseEntity.badRequest().build();
         }

@@ -11,9 +11,9 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/career_db?createDatabaseIfNotExist=true
       - SPRING_DATASOURCE_USERNAME=noon_user
       - SPRING_DATASOURCE_PASSWORD=noon_password
-      - SPRING_MAIL_USERNAME=${SPRING_MAIL_USERNAME} # Pass your email from a .env file
-      - SPRING_MAIL_PASSWORD=${SPRING_MAIL_PASSWORD} # Pass your app password from a .env file
-      - JWT_SECRET=${JWT_SECRET} # Pass your JWT secret from a .env file
+      - SPRING_MAIL_USERNAME=${SPRING_MAIL_USERNAME}
+      - SPRING_MAIL_PASSWORD=${SPRING_MAIL_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRATION_SECONDS=3600
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
