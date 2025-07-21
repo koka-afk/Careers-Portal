@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.springframework.boot.autoconfigure.batch.BatchProperties;
 import org.springframework.cglib.core.Local;
 import org.springframework.security.core.GrantedAuthority;
@@ -39,6 +40,12 @@ public class User implements UserDetails {
 
     @Column(name = "last_name", nullable = false)
     private String lastName;
+
+    @Column(name = "linkedin_profile")
+    private String linkedinProfile;
+
+    @Column(name = "github_profile")
+    private String githubProfile;
 
     @Column(name = "is_email_verified", nullable = false)
     private boolean emailVerified = false;
@@ -82,15 +89,28 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonIgnore
+    @ToString.Exclude
     private List<JobApplication> applications;
 
     @OneToMany(mappedBy = "referredUser", cascade = CascadeType.ALL)
     @JsonIgnore
+    @ToString.Exclude
     private List<Referral> receivedReferrals;
 
     @OneToMany(mappedBy = "referrer", cascade = CascadeType.ALL)
     @JsonIgnore
+    @ToString.Exclude
     private List<Referral> sentReferrals;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    @ToString.Exclude
+    private List<Education> education;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    @ToString.Exclude
+    private List<Experience> experience;
 
     @PrePersist
     protected void onCreate(){

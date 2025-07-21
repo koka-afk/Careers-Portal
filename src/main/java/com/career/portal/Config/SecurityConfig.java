@@ -45,6 +45,7 @@ public class SecurityConfig {
                                 "/api/auth/reset-password",
                                 "/api/auth/resend-verification-email"
                         ).permitAll()
+                        .requestMatchers("/api/profile/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

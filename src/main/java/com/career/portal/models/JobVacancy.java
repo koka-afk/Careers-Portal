@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -61,6 +62,7 @@ public class JobVacancy {
 
     @OneToMany(mappedBy = "jobVacancy", cascade = CascadeType.ALL)
     @JsonIgnore
+    @ToString.Exclude
     private List<JobApplication> applications;
 
     @PrePersist

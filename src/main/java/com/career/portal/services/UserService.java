@@ -1,10 +1,17 @@
 package com.career.portal.services;
 
+import com.career.portal.dto.EducationRequest;
+import com.career.portal.dto.ExperienceRequest;
 import com.career.portal.dto.UserProfileUpdateRequest;
+import com.career.portal.models.Education;
+import com.career.portal.models.Experience;
 import com.career.portal.models.User;
 import com.career.portal.models.UserRole;
+import com.career.portal.repositories.EducationRepository;
+import com.career.portal.repositories.ExperienceRepository;
 import com.career.portal.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -24,6 +32,9 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final EducationRepository educationRepository;
+    private final ExperienceRepository experienceRepository;
+
 
     public User registerUser(User user) {
         if(userRepository.existsByEmail(user.getEmail())){
@@ -86,8 +97,84 @@ public class UserService {
         existingUser.setFirstName(userProfileUpdateRequest.getFirstName());
         existingUser.setLastName(userProfileUpdateRequest.getLastName());
         existingUser.setPhone(userProfileUpdateRequest.getPhone());
+        existingUser.setLinkedinProfile(userProfileUpdateRequest.getLinkedinProfile());
+        existingUser.setGithubProfile(userProfileUpdateRequest.getGithubProfile());
 
         return userRepository.save(existingUser);
+    }
+
+    public Education addEducation(Long userId, EducationRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Education education = new Education();
+        education.setUser(user);
+        education.setSchool(request.getSchool());
+        education.setDegree(request.getDegree());
+        education.setFieldOfStudy(request.getFieldOfStudy());
+        education.setStartDate(request.getStartDate());
+        education.setEndDate(request.getEndDate());
+        return educationRepository.save(education);
+    }
+
+    public Education updateEducation(Long educationId, EducationRequest request) {
+        Education education = educationRepository.findById(educationId)
+                .orElseThrow(() -> new IllegalArgumentException("Education record not found"));
+        education.setSchool(request.getSchool());
+        education.setDegree(request.getDegree());
+        education.setFieldOfStudy(request.getFieldOfStudy());
+        education.setStartDate(request.getStartDate());
+        education.setEndDate(request.getEndDate());
+        return educationRepository.save(education);
+    }
+
+    public void deleteEducation(Long educationId) {
+        if (!educationRepository.existsById(educationId)) {
+            throw new IllegalArgumentException("Education record not found");
+        }
+        educationRepository.deleteById(educationId);
+    }
+
+    public Experience addExperience(Long userId, ExperienceRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Experience experience = new Experience();
+        experience.setUser(user);
+        experience.setTitle(request.getTitle());
+        experience.setCompany(request.getCompany());
+        experience.setLocation(request.getLocation());
+        experience.setStartDate(request.getStartDate());
+        experience.setEndDate(request.getEndDate());
+        experience.setDescription(request.getDescription());
+        return experienceRepository.save(experience);
+    }
+
+    public Experience updateExperience(Long experienceId, ExperienceRequest request) {
+        Experience experience = experienceRepository.findById(experienceId)
+                .orElseThrow(() -> new IllegalArgumentException("Experience record not found"));
+        experience.setTitle(request.getTitle());
+        experience.setCompany(request.getCompany());
+        experience.setLocation(request.getLocation());
+        experience.setStartDate(request.getStartDate());
+        experience.setEndDate(request.getEndDate());
+        experience.setDescription(request.getDescription());
+        return experienceRepository.save(experience);
+    }
+
+    public void deleteExperience(Long experienceId) {
+        if (!experienceRepository.existsById(experienceId)) {
+            throw new IllegalArgumentException("Experience record not found");
+        }
+        experienceRepository.deleteById(experienceId);
+    }
+
+    public boolean canModifyEducation(Long educationId, Long userId) {
+        Education education = educationRepository.findById(educationId).orElse(null);
+        return education != null && education.getUser().getId().equals(userId);
+    }
+
+    public boolean canModifyExperience(Long experienceId, Long userId) {
+        Experience experience = experienceRepository.findById(experienceId).orElse(null);
+        return experience != null && experience.getUser().getId().equals(userId);
     }
 
     public void deleteUser(Long userId){

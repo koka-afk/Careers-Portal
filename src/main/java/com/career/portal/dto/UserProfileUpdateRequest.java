@@ -8,6 +8,7 @@ public class UserProfileUpdateRequest {
     private String firstName;
     private String lastName;
     private String phone;
-
+    private String linkedinProfile;
+    private String githubProfile;
 
 }
