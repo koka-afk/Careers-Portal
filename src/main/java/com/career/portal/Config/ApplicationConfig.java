@@ -1,6 +1,7 @@
 package com.career.portal.Config;
 
 import com.career.portal.repositories.UserRepository;
+import com.cloudinary.Cloudinary;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +28,9 @@ public class ApplicationConfig {
 
     @Value("${spring.mail.password}")
     private String mailPassword;
+
+    @Value("${CLOUDINARY_URL}")
+    private String cloudinaryUrl;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -64,6 +68,11 @@ public class ApplicationConfig {
         authProvider.setUserDetailsService(userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
+    }
+
+    @Bean
+    public Cloudinary cloudinary() {
+        return new Cloudinary(cloudinaryUrl);
     }
 
 

@@ -4,7 +4,6 @@ import com.career.portal.models.User;
 import com.career.portal.models.UserRole;
 import com.career.portal.services.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

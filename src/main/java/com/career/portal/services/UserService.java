@@ -185,10 +185,11 @@ public class UserService {
         return userRepository.findByProfileScoreGreaterThan(minScore);
     }
 
-    public User uploadResume(Long userId, String resumePath){
+    public User uploadResume(Long userId, String resumePath, String resumePublicId){
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         user.setResumePath(resumePath);
+        user.setResumePublicId(resumePublicId);
         return userRepository.save(user);
     }
 

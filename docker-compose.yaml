@@ -17,6 +17,7 @@ services:
       - JWT_EXPIRATION_SECONDS=3600
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - CLOUDINARY_URL=${CLOUDINARY_URL}
     volumes:
       - ./uploads:/app/uploads
     depends_on:

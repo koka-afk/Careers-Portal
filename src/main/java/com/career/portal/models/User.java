@@ -81,6 +81,9 @@ public class User implements UserDetails {
     @Column(name = "resume_path")
     private String resumePath;
 
+    @Column(name = "resume_public_id")
+    private String resumePublicId;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

@@ -3,8 +3,11 @@ package com.career.portal.controllers;
 import com.career.portal.dto.UserProfileUpdateRequest;
 import com.career.portal.models.User;
 import com.career.portal.models.UserRole;
+import com.career.portal.services.CloudinaryService;
 import com.career.portal.services.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,13 +15,16 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -26,6 +32,8 @@ public class UserController {
 
     private final UserService userService;
     private static final String UPLOAD_DIR = "uploads/resumes/";
+    private final CloudinaryService cloudinaryService;
+
 
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody User user){
@@ -72,24 +80,52 @@ public class UserController {
                 return ResponseEntity.badRequest().build();
             }
 
-            Path uploadPath = Paths.get(UPLOAD_DIR);
-            if(!Files.exists(uploadPath)){
-                Files.createDirectories(uploadPath);
-            }
-            String originalFilename = file.getOriginalFilename();
-            if(originalFilename == null || originalFilename.contains("..")){
-                return ResponseEntity.badRequest().build();
-            }
-            String fileName = id + "_" + originalFilename;
-            Path filePath = uploadPath.resolve(fileName);
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            User user = userService.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-            User updatedUser = userService.uploadResume(id, filePath.toString());
+            if (user.getResumePublicId() != null && !user.getResumePublicId().isEmpty()) {
+                cloudinaryService.deleteFile(user.getResumePublicId());
+            }
+
+            Map<String, String> uploadResult = cloudinaryService.uploadFile(file, id);
+            String fileUrl = uploadResult.get("url");
+            String publicId = uploadResult.get("public_id");
+
+            User updatedUser = userService.uploadResume(id, fileUrl, publicId);
 
             return ResponseEntity.ok(updatedUser);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @GetMapping("/{userId}/resume/view")
+    @PreAuthorize("hasRole('RECRUITER')")
+    public ResponseEntity<Void> viewResume(@PathVariable Long userId) {
+        User user = userService.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        if (user.getResumePath() != null && !user.getResumePath().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(URI.create(user.getResumePath()))
+                    .build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    private String extractPublicIdFromPath(String cloudinaryUrl) {
+
+        if (cloudinaryUrl.contains("/upload/")) {
+            String[] parts = cloudinaryUrl.split("/upload/");
+            if (parts.length > 1) {
+                String afterUpload = parts[1];
+                if (afterUpload.startsWith("v") && afterUpload.contains("/")) {
+                    afterUpload = afterUpload.substring(afterUpload.indexOf("/") + 1);
+                }
+                return afterUpload.replaceAll("\\.[^.]+$", "");
+            }
+        }
+
+        return cloudinaryUrl;
     }
 
     @PutMapping("/{id}/score")
