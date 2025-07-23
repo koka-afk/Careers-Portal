@@ -4,8 +4,11 @@ import com.career.portal.dto.EducationRequest;
 import com.career.portal.dto.ExperienceRequest;
 import com.career.portal.models.Education;
 import com.career.portal.models.Experience;
+import com.career.portal.repositories.EducationRepository;
+import com.career.portal.repositories.ExperienceRepository;
 import com.career.portal.services.UserService;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +17,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/profile")
@@ -21,7 +26,19 @@ import org.springframework.web.bind.annotation.*;
 public class UserProfileController {
 
     private final UserService userService;
+    private final EducationRepository educationRepository;
+    private final ExperienceRepository experienceRepository;
 
+    @GetMapping("/{userId}/education")
+    @PreAuthorize("#userId == authentication.principal.id OR hasRole('RECRUITER')")
+    public ResponseEntity<List<Education>> getEducationList(@PathVariable Long userId){
+        try{
+            List<Education> userEducations = educationRepository.findEducationsByUserId(userId);
+            return ResponseEntity.ok(userEducations);
+        }catch (IllegalArgumentException e){
+            return ResponseEntity.notFound().build();
+        }
+    }
 
     @PostMapping("/{userId}/education")
     @PreAuthorize("#userId == authentication.principal.id")
@@ -56,6 +73,16 @@ public class UserProfileController {
         }
     }
 
+    @GetMapping("/{userId}/experience")
+    @PreAuthorize("#userId == authentication.principal.id OR hasRole('RECRUITER')")
+    public ResponseEntity<List<Experience>> getExperienceList(@PathVariable Long userId){
+        try {
+            List<Experience> experienceList = experienceRepository.findByUserId(userId);
+            return ResponseEntity.ok(experienceList);
+        }catch (IllegalArgumentException e){
+            return ResponseEntity.notFound().build();
+        }
+    }
 
     @PostMapping("/{userId}/experience")
     @PreAuthorize("#userId == authentication.principal.id")
