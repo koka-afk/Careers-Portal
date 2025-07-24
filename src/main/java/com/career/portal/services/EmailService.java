@@ -2,6 +2,7 @@ package com.career.portal.services;
 
 import com.career.portal.models.EmailTemplate;
 import com.career.portal.models.EmailTemplateType;
+import com.career.portal.models.JobVacancy;
 import com.career.portal.models.User;
 import com.career.portal.repositories.EmailTemplateRepository;
 import lombok.RequiredArgsConstructor;
@@ -155,4 +156,50 @@ public class EmailService {
                 Noon Careers
                 """.formatted(resetUrl);
     }
+
+    public void sendShortlistEmail(User candidate, JobVacancy jobVacancy, String assessmentLink) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(candidate.getEmail());
+            message.setSubject("Congratulations! You've been shortlisted for the " + jobVacancy.getTitle() + " position");
+            message.setText(buildShortlistEmailContent(candidate, jobVacancy, assessmentLink));
+
+            mailSender.send(message);
+            log.info("Shortlist email sent successfully to: {}", candidate.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send shortlist email to: {}", candidate.getEmail(), e);
+            throw new RuntimeException("Failed to send shortlist email", e);
+        }
+    }
+
+    private String buildShortlistEmailContent(User candidate, JobVacancy jobVacancy, String assessmentLink) {
+        // For now, we'll use a hardcoded assessment link.
+        // This can be replaced with a dynamically generated link from HackerEarth.
+        if (assessmentLink == null || assessmentLink.isEmpty()) {
+            assessmentLink = "https://www.hackerearth.com/challenge/test/your-test-id/";
+        }
+
+        return String.format(
+                """
+                Dear %s,
+    
+                Congratulations! We are pleased to inform you that you have been shortlisted for the position of %s.
+                We were very impressed with your application and would like to invite you to the next stage of our recruitment process, which is a coding assessment.
+    
+                Please use the following link to access the assessment:
+                %s
+    
+                The assessment should take approximately 60-90 minutes to complete. Please ensure you have a stable internet connection and a quiet environment.
+    
+                We wish you the best of luck!
+    
+                Best regards,
+                The Noon Careers Team
+                """,
+                candidate.getFirstName(),
+                jobVacancy.getTitle(),
+                assessmentLink
+        );
+    }
+
 }

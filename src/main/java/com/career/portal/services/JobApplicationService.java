@@ -23,6 +23,7 @@ public class JobApplicationService {
     private final JobApplicationRepository jobApplicationRepository;
     private final UserRepository userRepository;
     private final JobVacancyRepository jobVacancyRepository;
+    private final EmailService emailService;
 
     public JobApplication submitApplication(JobApplication jobApplication){
         User user = userRepository.findById(jobApplication.getUser().getId())
@@ -69,6 +70,12 @@ public class JobApplicationService {
         application.setStatus(status);
         application.setReviewedBy(reviewerId);
         application.setReviewedAt(LocalDateTime.now());
+
+        if (status == ApplicationStatus.SHORTLISTED) {
+            User candidate = application.getUser();
+            JobVacancy jobVacancy = application.getJobVacancy();
+            emailService.sendShortlistEmail(candidate, jobVacancy, "");
+        }
 
         return jobApplicationRepository.save(application);
     }
