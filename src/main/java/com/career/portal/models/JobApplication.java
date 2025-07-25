@@ -50,6 +50,9 @@ public class JobApplication {
     @Column(name = "has_referral")
     private Boolean hasReferral = false;
 
+    @Column(name = "assessment_score")
+    private Integer assessmentScore;
+
     @PrePersist
     protected void onCreate(){
         appliedAt = LocalDateTime.now();

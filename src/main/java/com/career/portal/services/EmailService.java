@@ -157,13 +157,20 @@ public class EmailService {
                 """.formatted(resetUrl);
     }
 
-    public void sendShortlistEmail(User candidate, JobVacancy jobVacancy, String assessmentLink) {
+    public void sendShortlistEmail(User candidate, JobVacancy jobVacancy, String assessmentToken) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(candidate.getEmail());
             message.setSubject("Congratulations! You've been shortlisted for the " + jobVacancy.getTitle() + " position");
-            message.setText(buildShortlistEmailContent(candidate, jobVacancy, assessmentLink));
+            String assessmentLink = "http://localhost:5173/assessment/" + assessmentToken;
+            String emailBody = String.format(
+                    "Dear %s,\n\nCongratulations! You have been shortlisted for the %s position. Please complete the coding assessment at the following link:\n%s\n\nBest regards,\nThe Careers Portal Team",
+                    candidate.getFirstName(),
+                    jobVacancy.getTitle(),
+                    assessmentLink
+            );
 
+            message.setText(emailBody);
             mailSender.send(message);
             log.info("Shortlist email sent successfully to: {}", candidate.getEmail());
         } catch (Exception e) {
@@ -173,8 +180,6 @@ public class EmailService {
     }
 
     private String buildShortlistEmailContent(User candidate, JobVacancy jobVacancy, String assessmentLink) {
-        // For now, we'll use a hardcoded assessment link.
-        // This can be replaced with a dynamically generated link from HackerEarth.
         if (assessmentLink == null || assessmentLink.isEmpty()) {
             assessmentLink = "https://www.hackerearth.com/challenge/test/your-test-id/";
         }

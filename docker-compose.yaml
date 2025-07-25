@@ -5,8 +5,6 @@ services:
 #    restart: always
     ports:
       - "8080:8080"
-    # Environment variables passed to the Spring Boot application
-    # These will override the values in application.properties
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/career_db?createDatabaseIfNotExist=true
       - SPRING_DATASOURCE_USERNAME=noon_user
@@ -18,11 +16,14 @@ services:
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - CLOUDINARY_URL=${CLOUDINARY_URL}
+      - JUDGE0_API_URL=${JUDGE0_API_URL}
+      - RAPID_API_KEY=${RAPID_API_KEY}
+      - RAPID_API_HOST=${RAPID_API_HOST}
     volumes:
       - ./uploads:/app/uploads
     depends_on:
       - mysql-db
-    # Connect this service to the 'career-network'
+      - judge0-server
     networks:
       - career-network
 
@@ -34,20 +35,87 @@ services:
       MYSQL_DATABASE: career_db
       MYSQL_USER: noon_user
       MYSQL_PASSWORD: noon_password
-      MYSQL_ROOT_PASSWORD: root_password # Secure password for the root user
-    # Map a volume to persist database data on the host machine
+      MYSQL_ROOT_PASSWORD: root_password
     volumes:
       - db-data:/var/lib/mysql
-    # Connect this service to the 'career-network'
     networks:
       - career-network
 
-# Define the network for communication between services
+  judge0-server:
+    image: judge0/judge0:1.13.0
+    container_name: judge0-server
+    command: ["./scripts/server"]
+    environment:
+      - JUDGE0_DATABASE_HOST=judge0-db
+      - JUDGE0_DATABASE_USER=judge0
+      - JUDGE0_DATABASE_PASSWORD=a_secure_password
+      - JUDGE0_DATABASE_NAME=judge0_db
+      - JUDGE0_REDIS_HOST=judge0-redis
+      - REDIS_HOST=judge0-redis
+      - REDIS_PORT=6379
+      - POSTGRES_HOST=judge0-db
+      - POSTGRES_USER=judge0
+      - POSTGRES_PASSWORD=a_secure_password
+      - POSTGRES_DB=judge0_db
+    ports:
+      - "2358:2358"
+    depends_on:
+      judge0-db:
+        condition: service_started
+      judge0-redis:
+        condition: service_healthy
+    networks:
+      - career-network
+
+  judge0-worker:
+    image: judge0/judge0:1.13.0
+    container_name: judge0-worker
+    command: bash -c "export RESQUE_REDIS_URL=redis://judge0-redis:6379 && ./scripts/workers"
+    privileged: true
+    environment:
+      - JUDGE0_DATABASE_HOST=judge0-db
+      - JUDGE0_DATABASE_USER=judge0
+      - JUDGE0_DATABASE_PASSWORD=a_secure_password
+      - JUDGE0_DATABASE_NAME=judge0_db
+      - REDIS_HOST=judge0-redis
+      - REDIS_PORT=6379
+    depends_on:
+      judge0-server:
+        condition: service_started
+      judge0-redis:
+        condition: service_healthy
+    networks:
+      - career-network
+
+  judge0-db:
+      image: postgres:13
+      container_name: judge0-db
+      environment:
+        POSTGRES_USER: judge0
+        POSTGRES_PASSWORD: a_secure_password
+        POSTGRES_DB: judge0_db
+      volumes:
+        - judge0-db-data:/var/lib/postgresql/data
+      networks:
+        - career-network
+
+  judge0-redis:
+      image: redis:6
+      container_name: judge0-redis
+      networks:
+        - career-network
+      healthcheck:
+        test: [ "CMD", "redis-cli", "ping" ]
+        interval: 1s
+        timeout: 3s
+        retries: 30
+
 networks:
   career-network:
     driver: bridge
 
-# Define the named volume for data persistence
 volumes:
   db-data:
+    driver: local
+  judge0-db-data:
     driver: local
