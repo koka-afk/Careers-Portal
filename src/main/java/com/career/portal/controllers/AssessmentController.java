@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Map;
 
 @Slf4j
@@ -38,7 +40,6 @@ public class AssessmentController {
     public ResponseEntity<Assessment> submitAssessment(@PathVariable String token, @RequestBody Map<String, Object> payload) {
         String code = (String) payload.get("code");
         int languageId = Integer.parseInt(payload.get("languageId").toString());
-        log.info("Submitting assessment with code {} and language {}", code, languageId);
         Assessment result = assessmentService.submitAssessment(token, code, languageId);
         return ResponseEntity.ok(result);
     }
@@ -82,15 +83,12 @@ public class AssessmentController {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Public test case not found."));
 
-        Double timeLimit = 2.0;
-        Integer memoryLimit = 128000;
-
         SubmissionDetails submissionDetails = SubmissionDetails.builder()
                 .sourceCode(code)
                 .languageId(languageId)
                 .stdin(testCase.getInput())
-                .cpuTimeLimit(timeLimit)
-                .memoryLimit(memoryLimit)
+                .cpuTimeLimit(2.0)
+                .memoryLimit(128000)
                 .build();
 
         String responseJson = judge0Service.createSubmission(submissionDetails);
@@ -99,11 +97,45 @@ public class AssessmentController {
 
         try {
             result = mapper.readValue(responseJson, new TypeReference<>() {});
+
+            decodeJudge0Response(result);
+
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse Judge0 response", e);
         }
 
         return ResponseEntity.ok(result);
+    }
+
+    private void decodeJudge0Response(Map<String, Object> result) {
+        String[] encodedFields = {"stdout", "stderr", "compile_output", "message"};
+
+        for (String field : encodedFields) {
+            if (result.containsKey(field)) {
+                String encodedValue = (String) result.get(field);
+                if (encodedValue != null && !encodedValue.isEmpty()) {
+                    try {
+                        String decodedValue = new String(
+                                Base64.getDecoder().decode(encodedValue),
+                                StandardCharsets.UTF_8
+                        );
+                        result.put(field, decodedValue);
+                    } catch (IllegalArgumentException e) {
+                        log.warn("Failed to decode {} field: {}", field, e.getMessage());
+                    }
+                }
+            }
+        }
+
+        if (result.containsKey("token")) {
+            String encodedToken = (String) result.get("token");
+            if (encodedToken != null) {
+                result.put("token", new String(
+                        Base64.getDecoder().decode(encodedToken),
+                        StandardCharsets.UTF_8
+                ));
+            }
+        }
     }
 
 }
