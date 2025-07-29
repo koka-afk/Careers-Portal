@@ -62,6 +62,10 @@ public class ReferralService {
         return referralRepository.findPendingReferralsForUser(userId);
     }
 
+    public Optional<Referral> findByReferredUserAndJobVacancy(Long referredUserId, Long jobVacancyId) {
+        return referralRepository.findByReferredUserIdAndJobVacancyId(referredUserId, jobVacancyId);
+    }
+
     public Referral acceptReferral(Long referralId){
         Referral referral = referralRepository.findById(referralId)
                 .orElseThrow(() -> new IllegalArgumentException("Referral not found."));

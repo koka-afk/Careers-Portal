@@ -27,5 +27,6 @@ public class TestCase {
     @Column(columnDefinition = "TEXT")
     private String expectedOutput;
 
-    private boolean isPublic;
+    @Column(nullable = false)
+    private Boolean isPublic = true;
 }

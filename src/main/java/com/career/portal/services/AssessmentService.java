@@ -1,6 +1,7 @@
 package com.career.portal.services;
 
 import com.career.portal.dto.SubmissionDetails;
+import com.career.portal.dto.TestCaseDto;
 import com.career.portal.models.Assessment;
 import com.career.portal.models.JobApplication;
 import com.career.portal.models.Question;
@@ -29,7 +30,7 @@ public class AssessmentService {
     private final AssessmentRepository assessmentRepository;
     private final QuestionRepository questionRepository;
     private final Judge0Service judge0Service;
-
+    private final EmailService emailService;
     public Assessment createAssessment(JobApplication jobApplication) {
         Assessment assessment = new Assessment();
         assessment.setJobApplication(jobApplication);
@@ -42,7 +43,7 @@ public class AssessmentService {
 
     public Assessment getAssessmentByToken(String token) {
         return assessmentRepository.findByAssessmentToken(token)
-                .filter(assessment -> assessment.getExpiresAt().isAfter(LocalDateTime.now()))
+                .filter(assessment -> assessment.getExpiresAt().isAfter(LocalDateTime.now()) && assessment.getCompletedAt() == null)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid or expired assessment token."));
     }
 
@@ -54,7 +55,7 @@ public class AssessmentService {
         Question question = assessment.getQuestions().get(0);
 
         List<TestCase> privateTestCases = question.getTestCases().stream()
-                .filter(tc -> !tc.isPublic())
+                .filter(tc -> !tc.getIsPublic())
                 .toList();
 
         ObjectMapper mapper = new ObjectMapper();
@@ -79,9 +80,6 @@ public class AssessmentService {
                             new String(Base64.getDecoder().decode(encodedOutput), StandardCharsets.UTF_8) :
                             null;
 
-                    log.info("Decoded output: {}", output);
-                    log.info("Expected output: {}", testCase.getExpectedOutput());
-
                     if (output != null && output.trim().equals(testCase.getExpectedOutput().trim())) {
                         passedTestCases++;
                     }
@@ -97,7 +95,26 @@ public class AssessmentService {
 
         JobApplication jobApplication = assessment.getJobApplication();
         jobApplication.setAssessmentScore(score);
+        emailService.sendAssessmentConfirmationEmail(jobApplication.getUser(), jobApplication.getJobVacancy());
 
         return assessmentRepository.save(assessment);
+    }
+
+    public List<TestCaseDto> getQuestionTestCases(String assessmentToken, Long questionId) {
+        Assessment assessment = getAssessmentByToken(assessmentToken);
+
+        Question question = assessment.getQuestions().stream()
+                .filter(q -> q.getId().equals(questionId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Question not found in assessment"));
+
+        return question.getTestCases().stream()
+                .map(tc -> new TestCaseDto(
+                        tc.getId(),
+                        tc.getInput(),
+                        tc.getExpectedOutput(),
+                        tc.getIsPublic()
+                ))
+                .toList();
     }
 }

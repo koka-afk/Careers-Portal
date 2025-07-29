@@ -107,7 +107,7 @@ public class EmailService {
         String verificationUrl = frontendUrl + "/account-verified?token=" + verificationToken;
 
         return """
-                Welcome to Noon Careers!
+                Welcome to noon Careers!
                 
                 Thank you for registering with us. To complete your registration and activate your account, 
                 please click the link below to verify your email address:
@@ -119,7 +119,7 @@ public class EmailService {
                 If you didn't create an account with us, please ignore this email.
                 
                 Best regards,
-                Noon Careers
+                noon Careers Team
                 """.formatted(verificationUrl);
     }
 
@@ -153,7 +153,7 @@ public class EmailService {
                 If you didn't request a password reset, please ignore this email.
                 
                 Best regards,
-                Noon Careers
+                noon Careers Team
                 """.formatted(resetUrl);
     }
 
@@ -162,7 +162,7 @@ public class EmailService {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(candidate.getEmail());
             message.setSubject("Congratulations! You've been shortlisted for the " + jobVacancy.getTitle() + " position");
-            String assessmentLink = "http://localhost:5173/assessment/" + assessmentToken;
+            String assessmentLink = "http://localhost:5173/before-assessment/" + assessmentToken;
             String emailBody = String.format(
                     "Dear %s,\n\nCongratulations! You have been shortlisted for the %s position. Please complete the coding assessment at the following link:\n%s\n\nBest regards,\nThe Careers Portal Team",
                     candidate.getFirstName(),
@@ -194,16 +194,82 @@ public class EmailService {
                 Please use the following link to access the assessment:
                 %s
     
-                The assessment should take approximately 60-90 minutes to complete. Please ensure you have a stable internet connection and a quiet environment.
+                The assessment should take 60 minutes to complete. Please ensure you have a stable internet connection and a quiet environment.
     
                 We wish you the best of luck!
     
                 Best regards,
-                The Noon Careers Team
+                noon Careers Team
                 """,
                 candidate.getFirstName(),
                 jobVacancy.getTitle(),
                 assessmentLink
+        );
+    }
+
+    public void sendAssessmentConfirmationEmail(User candidate, JobVacancy jobVacancy) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(candidate.getEmail());
+            message.setSubject("Assessment Received for the " + jobVacancy.getTitle() + " Position");
+            message.setText(buildAssessmentConfirmationContent(candidate, jobVacancy));
+
+            mailSender.send(message);
+            log.info("Assessment confirmation email sent successfully to: {}", candidate.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send assessment confirmation email to: {}", candidate.getEmail(), e);
+        }
+    }
+
+    private String buildAssessmentConfirmationContent(User candidate, JobVacancy jobVacancy) {
+        return String.format(
+                """
+                Dear %s,
+    
+                Thank you for completing the coding assessment for the %s position.
+    
+                We have successfully received your submission. Our recruitment team will review your results, and we will get back to you with the next steps as soon as possible.
+    
+                We appreciate the time and effort you've put into this stage of the application process.
+    
+                Best regards,
+                noon Careers Team
+                """,
+                candidate.getFirstName(),
+                jobVacancy.getTitle()
+        );
+    }
+
+    public void sendApplicationConfirmationEmail(User candidate, JobVacancy jobVacancy) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(candidate.getEmail());
+            message.setSubject("Application Received for " + jobVacancy.getTitle());
+            message.setText(buildApplicationConfirmationContent(candidate, jobVacancy));
+
+            mailSender.send(message);
+            log.info("Application confirmation email sent successfully to: {}", candidate.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send application confirmation email to: {}", candidate.getEmail(), e);
+        }
+    }
+
+    private String buildApplicationConfirmationContent(User candidate, JobVacancy jobVacancy) {
+        return String.format(
+                """
+                Dear %s,
+    
+                Thank you for your interest in the %s position at noon.
+    
+                We have successfully received your application. Our team is now reviewing it and will get in touch with you if your qualifications meet the requirements of the role.
+    
+                We appreciate you taking the time to apply.
+    
+                Best regards,
+                noon Careers Team
+                """,
+                candidate.getFirstName(),
+                jobVacancy.getTitle()
         );
     }
 

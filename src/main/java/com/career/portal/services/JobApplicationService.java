@@ -22,6 +22,7 @@ public class JobApplicationService {
     private final JobVacancyRepository jobVacancyRepository;
     private final EmailService emailService;
     private final AssessmentService assessmentService;
+    private final ReferralService referralService;
 
 
     public JobApplication submitApplication(JobApplication jobApplication){
@@ -32,12 +33,17 @@ public class JobApplicationService {
 
         jobApplication.setUser(user);
         jobApplication.setJobVacancy(jobVacancy);
-
         if(jobApplicationRepository.existsByUserIdAndJobVacancyId(
                 jobApplication.getUser().getId(),
                 jobApplication.getJobVacancy().getId())){
             throw new IllegalStateException("User has already applied for this job.");
         }
+
+        Optional<Referral> referralOpt = referralService.findByReferredUserAndJobVacancy(user.getId(), jobVacancy.getId());
+        if (referralOpt.isPresent() && referralOpt.get().getStatus() == ReferralStatus.ACCEPTED) {
+            jobApplication.setHasReferral(true);
+        }
+        emailService.sendApplicationConfirmationEmail(user, jobVacancy);
 
         return jobApplicationRepository.save(jobApplication);
     }

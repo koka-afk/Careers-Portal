@@ -1,6 +1,7 @@
 package com.career.portal.controllers;
 
 import com.career.portal.dto.SubmissionDetails;
+import com.career.portal.dto.TestCaseDto;
 import com.career.portal.models.Assessment;
 import com.career.portal.models.TestCase;
 import com.career.portal.services.AssessmentService;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -79,7 +81,7 @@ public class AssessmentController {
 
         TestCase testCase = assessment.getQuestions().stream()
                 .flatMap(q -> q.getTestCases().stream())
-                .filter(tc -> tc.getId().equals(testCaseId) && tc.isPublic())
+                .filter(tc -> tc.getId().equals(testCaseId) ) //&& tc.getIsPublic()
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Public test case not found."));
 
@@ -108,8 +110,7 @@ public class AssessmentController {
     }
 
     private void decodeJudge0Response(Map<String, Object> result) {
-        String[] encodedFields = {"stdout", "stderr", "compile_output", "message"};
-
+        String[] encodedFields = {"stdout"};
         for (String field : encodedFields) {
             if (result.containsKey(field)) {
                 String encodedValue = (String) result.get(field);
@@ -127,15 +128,24 @@ public class AssessmentController {
             }
         }
 
-        if (result.containsKey("token")) {
-            String encodedToken = (String) result.get("token");
-            if (encodedToken != null) {
-                result.put("token", new String(
-                        Base64.getDecoder().decode(encodedToken),
-                        StandardCharsets.UTF_8
-                ));
-            }
-        }
+//        if (result.containsKey("token")) {
+//            String encodedToken = (String) result.get("token");
+//            if (encodedToken != null) {
+//                result.put("token", new String(
+//                        Base64.getDecoder().decode(encodedToken),
+//                        StandardCharsets.UTF_8
+//                ));
+//            }
+//        }
+    }
+
+    @GetMapping("/{token}/questions/{questionId}/test-cases")
+    public ResponseEntity<List<TestCaseDto>> getQuestionTestCases(
+            @PathVariable String token,
+            @PathVariable Long questionId) {
+
+        List<TestCaseDto> testCases = assessmentService.getQuestionTestCases(token, questionId);
+        return ResponseEntity.ok(testCases);
     }
 
 }
