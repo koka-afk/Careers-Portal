@@ -266,7 +266,6 @@ This project is created for educational and learning purposes only. It is not of
 
 ## 🔮 Future Enhancements
 
-- **Frontend Application**: React.js frontend interface
 - **Video Interviews**: Integration with video calling APIs
 - **Advanced Analytics**: Recruitment metrics and dashboards
 - **Mobile App**: React Native mobile application
