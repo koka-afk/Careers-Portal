@@ -54,8 +54,8 @@ public class AssessmentService {
         int passedTestCases = 0;
         Question question = assessment.getQuestions().get(0);
 
-        List<TestCase> privateTestCases = question.getTestCases().stream()
-                .filter(tc -> !tc.getIsPublic())
+        List<TestCase> privateTestCases = question.getTestCases().stream() // TODO: have private and public evaluations seperated
+//                .filter(tc -> !tc.getIsPublic())
                 .toList();
 
         ObjectMapper mapper = new ObjectMapper();

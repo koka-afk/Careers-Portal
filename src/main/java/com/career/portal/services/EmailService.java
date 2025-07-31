@@ -273,4 +273,46 @@ public class EmailService {
         );
     }
 
+    public void sendReferralNotificationEmail(User referredUser, User referrer, JobVacancy jobVacancy) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(referredUser.getEmail());
+            message.setSubject("You've been referred for a position at Noon!");
+            message.setText(buildReferralNotificationContent(referredUser, referrer, jobVacancy));
+
+            mailSender.send(message);
+            log.info("Referral notification email sent successfully to: {}", referredUser.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send referral notification email to: {}", referredUser.getEmail(), e);
+        }
+    }
+
+    private String buildReferralNotificationContent(User referredUser, User referrer, JobVacancy jobVacancy) {
+        // The link will direct the user to the login page, and from there they can navigate to their profile to see pending referrals.
+        String loginUrl = frontendUrl + "/login";
+
+        return String.format(
+                """
+                Hi %s,
+    
+                Great news! an noon employee, %s %s, has referred you for the %s position at noon.
+    
+                They believe your skills and experience would be a great fit for our team. You can view and accept this referral by logging into your account on our careers portal.
+    
+                Please log in to learn more:
+                %s
+    
+                We look forward to seeing your application!
+    
+                Best regards,
+                noon Careers Team
+                """,
+                referredUser.getFirstName(),
+                referrer.getFirstName(),
+                referrer.getLastName(),
+                jobVacancy.getTitle(),
+                loginUrl
+        );
+    }
+
 }

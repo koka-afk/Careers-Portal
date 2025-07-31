@@ -26,6 +26,7 @@ public class ReferralService {
     private final ReferralRepository referralRepository;
     private final JobVacancyRepository jobVacancyRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     public Referral createReferral(ReferralRequest referralRequest, Long referrerId){
         User referrer = userRepository.findById(referrerId)
@@ -51,6 +52,7 @@ public class ReferralService {
         newReferral.setJobVacancy(jobVacancy);
         newReferral.setMessage(referralRequest.getMessage());
 
+        emailService.sendReferralNotificationEmail(referredUser, referrer, jobVacancy);
         return referralRepository.save(newReferral);
     }
 
