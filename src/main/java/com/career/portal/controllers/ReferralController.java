@@ -84,5 +84,4 @@ public class ReferralController {
         List<Referral> referrals = referralService.findByReferrerAndJobVacancy(referrerId, jobId);
         return ResponseEntity.ok(referrals);
     }
-
 }

@@ -59,7 +59,7 @@ public class JobVacancyService {
     public void deactivateJobVacancy(Long id){
         JobVacancy vacancy = jobVacancyRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Job Vacancy Not Found"));
-        vacancy.setActive(false);
+        vacancy.setIsActive(false);
         jobVacancyRepository.save(vacancy);
     }
 

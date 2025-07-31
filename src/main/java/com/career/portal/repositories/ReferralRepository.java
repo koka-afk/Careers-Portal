@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ReferralRepository extends JpaRepository<Referral, Long> {
@@ -18,7 +19,8 @@ public interface ReferralRepository extends JpaRepository<Referral, Long> {
 
     List<Referral> findByStatus(ReferralStatus status);
 
-    @Query("SELECT r FROM Referral r WHERE r.referredUser.id = :userId AND r.status = 'PENDING'")
+//    @Query("SELECT r FROM Referral r WHERE r.referredUser.id = :userId AND r.status = 'PENDING'")
+    @Query("SELECT r FROM Referral r WHERE r.referredUser.id = :userId")
     List<Referral> findPendingReferralsForUser(@Param("userId") Long userId);
 
     @Query("SELECT r FROM Referral r WHERE r.referrer.id = :referrerId AND r.jobVacancy.id = :jobVacancyId")
@@ -29,4 +31,6 @@ public interface ReferralRepository extends JpaRepository<Referral, Long> {
 
     @Query("SELECT r FROM Referral r WHERE r.status = 'PENDING' AND r.createdAt < :expiryData")
     List<Referral> findExpiredReferrals(@Param("expiryData") LocalDateTime expiryData);
+
+    Optional<Referral> findByReferredUserIdAndJobVacancyId(Long userId, Long jobVacancyId);
 }

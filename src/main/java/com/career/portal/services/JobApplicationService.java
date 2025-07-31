@@ -1,9 +1,6 @@
 package com.career.portal.services;
 
-import com.career.portal.models.ApplicationStatus;
-import com.career.portal.models.JobApplication;
-import com.career.portal.models.JobVacancy;
-import com.career.portal.models.User;
+import com.career.portal.models.*;
 import com.career.portal.repositories.JobApplicationRepository;
 import com.career.portal.repositories.JobVacancyRepository;
 import com.career.portal.repositories.UserRepository;
@@ -24,6 +21,9 @@ public class JobApplicationService {
     private final UserRepository userRepository;
     private final JobVacancyRepository jobVacancyRepository;
     private final EmailService emailService;
+    private final AssessmentService assessmentService;
+    private final ReferralService referralService;
+
 
     public JobApplication submitApplication(JobApplication jobApplication){
         User user = userRepository.findById(jobApplication.getUser().getId())
@@ -33,12 +33,17 @@ public class JobApplicationService {
 
         jobApplication.setUser(user);
         jobApplication.setJobVacancy(jobVacancy);
-
         if(jobApplicationRepository.existsByUserIdAndJobVacancyId(
                 jobApplication.getUser().getId(),
                 jobApplication.getJobVacancy().getId())){
             throw new IllegalStateException("User has already applied for this job.");
         }
+
+        Optional<Referral> referralOpt = referralService.findByReferredUserAndJobVacancy(user.getId(), jobVacancy.getId());
+        if (referralOpt.isPresent() && referralOpt.get().getStatus() == ReferralStatus.ACCEPTED) {
+            jobApplication.setHasReferral(true);
+        }
+        emailService.sendApplicationConfirmationEmail(user, jobVacancy);
 
         return jobApplicationRepository.save(jobApplication);
     }
@@ -64,17 +69,16 @@ public class JobApplicationService {
     }
 
     public JobApplication updateApplicationStatus(Long applicationId, ApplicationStatus status, Long reviewerId){
-        JobApplication application = jobApplicationRepository.findById(applicationId).
-                orElseThrow(() -> new IllegalArgumentException("Application not found."));
+        JobApplication application = jobApplicationRepository.findById(applicationId)
+                .orElseThrow(() -> new IllegalArgumentException("Application not found."));
 
         application.setStatus(status);
         application.setReviewedBy(reviewerId);
         application.setReviewedAt(LocalDateTime.now());
 
         if (status == ApplicationStatus.SHORTLISTED) {
-            User candidate = application.getUser();
-            JobVacancy jobVacancy = application.getJobVacancy();
-            emailService.sendShortlistEmail(candidate, jobVacancy, "");
+            Assessment assessment = assessmentService.createAssessment(application);
+            emailService.sendShortlistEmail(application.getUser(), application.getJobVacancy(), assessment.getAssessmentToken());
         }
 
         return jobApplicationRepository.save(application);

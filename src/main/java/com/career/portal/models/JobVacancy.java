@@ -49,7 +49,7 @@ public class JobVacancy {
     private Double maxSalary;
 
     @Column(name = "is_active")
-    private boolean isActive;
+    private Boolean isActive;
 
     @Column(name = "posted_by")
     private Long postedBy;
